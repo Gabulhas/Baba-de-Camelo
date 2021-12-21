@@ -3,11 +3,13 @@ local ns_id = vim.api.nvim_create_namespace('baba_de_camelo_inlays')
 
 M = {}
 
-local function i(value)
-    print(vim.inspect(value))
-end
+-- local function i(value)
+--     print(vim.inspect(value))
+-- end
 
 local all_symbols_query = vim.treesitter.parse_query("ocaml", [[(let_binding pattern: (value_name) @definitionname (#offset! @definitionname))]])
+
+local prefix_with = "» "
 
 local function get_syntax_tree_root()
     local bufnr = vim.api.nvim_get_current_buf()
@@ -20,7 +22,6 @@ local function clean_markdown(symbol_type)
     return symbol_type:sub(10, #symbol_type - 4)
 end
 
--- Renders symbol type as inlay
 local function symbol_type_to_inlay(symbol_type, line)
     local bufnr = vim.api.nvim_get_current_buf()
     local opts = {end_line = line, virt_text = {{symbol_type, "Comment"}}, virt_text_pos = 'eol'}
@@ -30,24 +31,9 @@ end
 
 local function from_lsp_to_render(err, result, _, _)
     if err ~= nil then error(tostring(err)) end
-    --[[
-    {
-        contents = {
-            kind = "markdown",
-            value = "```ocaml\nreg\n```"
-        },
-        range = {
-            end = {
-            character = 15,
-            line = 106
-            },
-            start = {
-                character = 8,
-                line = 106
-            }
-        }
-    } ]]
-    local symbol_type = clean_markdown(result["contents"]["value"])
+
+    local symbol_type = prefix_with .. clean_markdown(result["contents"]["value"])
+
     local line = result["range"]["start"]["line"]
 
     symbol_type_to_inlay(symbol_type, line)
